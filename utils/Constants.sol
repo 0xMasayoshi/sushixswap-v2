@@ -28,6 +28,9 @@ contract Constants {
     setAddress("mainnet.sgeth", 0x72E2F4830b9E45d52F80aC08CB2bEC0FeF72eD9c);
     setAddress("mainnet.stargateUSDCPool", 0xdf0770dF86a8034b3EFEf0A1Bb3c889B8332FF56);
     setAddress("mainnet.stargateETHPool", 0x101816545F6bd2b1076434B54383a1E633390A2E);
+    setAddress("mainnet.stargateV2PoolNative", 0x77b2043768d28E9C9aB44E1aBfC95944bcE57931);
+    setAddress("mainnet.stargateV2PoolUSDC", 0xc026395860Db2d07ee33e05fE50ed7bD583189C7);
+    setAddress("mainnet.stargateV2PoolUSDT", 0x933597a323Eb81cAe705C5bC29985172fd5A3973);
     
     setAddress("mainnet.axelarGateway", 0x4F4495243837681061C4743b74B3eEdf548D56A5);
     setAddress("mainnet.axelarGasService", 0x2d5d7d31F671F86C782533cc367F14109a082712);
@@ -41,7 +44,12 @@ contract Constants {
     setAddress("arbitrum.axlUSDC", 0xEB466342C4d449BC9f53A865D5Cb90586f405215);
     setAddress("arbitrum.axlUSDT", 0x7f5373AE26c3E8FfC4c77b7255DF7eC1A9aF52a6);
     setAddress("arbitrum.axlETH", 0xb829b68f57CC546dA7E5806A929e53bE32a4625D);
+    setAddress("arbitrum.usdc", 0xaf88d065e77c8cC2239327C5EDb3A432268e5831);
     setAddress("arbitrum.usdt", 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
+    setAddress("arbitrum.weth", 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+    setAddress("arbitrum.routeProcessor", 0x544bA588efD839d2692Fc31EA991cD39993c135F);
+    setAddress("arbitrum.v2Factory", 0xc35DADB65012eC5796536bD9864eD8773aBc74C4);
+    setAddress("arbitrum.v3Factory", 0x1af415a1EbA07a4986a52B6f2e7dE7003D82231e);
   } 
 
   function initAddressLabels(Vm vm) public {

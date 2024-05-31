@@ -61,4 +61,8 @@ abstract contract BaseTest is Test {
   function forkFantom(uint256 blockNumber) internal {
     vm.createSelectFork(vm.envString("FANTOM_RPC_URL"), blockNumber);
   }
+
+  function addressToBytes32(address _addr) internal pure returns (bytes32) {
+    return bytes32(uint256(uint160(_addr)));
+  }
 }

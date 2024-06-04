@@ -158,7 +158,7 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
         params.stargate.sendToken{value: address(this).balance}(
             SendParam({
                 dstEid: params.dstEid,
-                to: bytes32(uint256(uint160(params.receiver))),
+                to: OFTComposeMsgCodec.addressToBytes32(params.receiver),
                 amountLD: params.amount,
                 minAmountLD: params.amountMin,
                 // TODO: should this be calculated off-chain? how to do InsufficientGas check then?

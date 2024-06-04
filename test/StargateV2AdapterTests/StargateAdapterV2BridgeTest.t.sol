@@ -97,6 +97,7 @@ contract StargateV2AdapterBridgeTest is BaseTest {
 
         // setup stargate adapter
         stargateV2Adapter = new StargateV2Adapter(
+            constants.getAddress("mainnet.stargateV2Endpoint"),
             constants.getAddress("mainnet.stargateV2PoolNative"),
             constants.getAddress("mainnet.routeProcessor"),
             constants.getAddress("mainnet.weth")

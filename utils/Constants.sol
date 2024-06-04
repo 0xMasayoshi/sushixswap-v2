@@ -31,6 +31,7 @@ contract Constants {
     setAddress("mainnet.stargateV2PoolNative", 0x77b2043768d28E9C9aB44E1aBfC95944bcE57931);
     setAddress("mainnet.stargateV2PoolUSDC", 0xc026395860Db2d07ee33e05fE50ed7bD583189C7);
     setAddress("mainnet.stargateV2PoolUSDT", 0x933597a323Eb81cAe705C5bC29985172fd5A3973);
+    setAddress("mainnet.stargateV2Endpoint", 0x1a44076050125825900e736c501f859c50fE728c);
     
     setAddress("mainnet.axelarGateway", 0x4F4495243837681061C4743b74B3eEdf548D56A5);
     setAddress("mainnet.axelarGasService", 0x2d5d7d31F671F86C782533cc367F14109a082712);

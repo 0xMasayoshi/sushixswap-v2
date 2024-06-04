@@ -5,11 +5,13 @@ import {IRouteProcessor} from "../interfaces/IRouteProcessor.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
 import {SafeERC20, IERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {OptionsBuilder} from "./lib/layer-zero/OptionsBuilder.sol";
+import {OFTComposeMsgCodec} from "./lib/layer-zero/OFTComposeMsgCodec.sol";
 import {IPayloadExecutor} from "../interfaces/IPayloadExecutor.sol";
 import {ISushiXSwapV2Adapter} from "../interfaces/ISushiXSwapV2Adapter.sol";
 // import {IStargateWidget} from "../interfaces/stargate/IStargateWidget.sol";
 import {SendParam, MessagingFee, MessagingReceipt, OFTReceipt} from "../interfaces/layer-zero/IOFT.sol";
 import {IStargate} from "../interfaces/stargate-v2/IStargate.sol";
+import {ILayerZeroComposer} from "../interfaces/layer-zero/ILayerZeroComposer.sol";
 
 import "forge-std/console.sol";
 
@@ -17,7 +19,8 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
     using SafeERC20 for IERC20;
     using OptionsBuilder for bytes;
 
-    address public immutable stargatePoolNative;
+    address public immutable stargateEndpoint;
+    address public immutable stargatePoolNative; // TODO: can probably remove
     IRouteProcessor public immutable rp;
     IWETH public immutable weth;
 
@@ -37,14 +40,16 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
     }
 
     error InsufficientGas();
-    error NotStargateComposer();
+    error NotStargateEndpoint();
     error RpSentNativeIn();
 
     constructor(
+        address _stargateEndpoint,
         address _stargatePoolNative,
         address _rp,
         address _weth
     ) {
+        stargateEndpoint = _stargateEndpoint;
         stargatePoolNative = _stargatePoolNative;
         rp = IRouteProcessor(_rp);
         weth = IWETH(_weth);
@@ -63,11 +68,11 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
         );
 
         // send tokens to RP
-        if (_token != stargatePoolNative) {
+        if (_token != address(0)) {
             IERC20(rpd.tokenIn).safeTransfer(address(rp), _amountBridged);
         }
 
-        rp.processRoute{value: _token == stargatePoolNative ? _amountBridged : 0}(
+        rp.processRoute{value: _token == address(0) ? _amountBridged : 0}(
             rpd.tokenIn,
             _amountBridged,
             rpd.tokenOut,
@@ -97,13 +102,13 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
     ) external payable override {
         PayloadData memory pd = abi.decode(_payloadData, (PayloadData));
 
-        if (_token != stargatePoolNative) {
+        if (_token != address(0)) {
             IERC20(_token).safeTransfer(pd.target, _amountBridged);
         }
 
         IPayloadExecutor(pd.target).onPayloadReceive{
             gas: pd.gasLimit,
-            value: _token == stargatePoolNative ? _amountBridged : 0
+            value: _token == address(0) ? _amountBridged : 0
         }(pd.targetData);
     }
 
@@ -170,6 +175,81 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
 
         // TODO: is this needed?
         // stargateWidget.partnerSwap(0x0001);
+    }
+
+    /// @notice Receiver function on dst chain
+    /// @param _from The address initiating the composition, typically the OApp where the lzReceive was called.
+    /// @param _guid The unique identifier for the corresponding LayerZero src/dst tx.
+    /// @param _message The composed message payload in bytes.
+    /// @param _executor The address of the executor for the composed message.
+    /// @param _extraData Additional arbitrary data in bytes passed by the entity who executes the lzCompose.
+    function lzCompose(
+        address _from,
+        bytes32 _guid,
+        bytes calldata _message,
+        address _executor,
+        bytes calldata _extraData
+    ) external payable {
+        uint256 gasLeft = gasleft();
+        // can't really do this check....
+        // require(_from == stargate, "!stargate");
+        if (msg.sender != address(stargateEndpoint))
+            revert NotStargateEndpoint();
+
+        uint256 amountLD = OFTComposeMsgCodec.amountLD(_message);
+
+        bytes memory _payload = OFTComposeMsgCodec.composeMsg(_message);
+
+        (address to, bytes memory _swapData, bytes memory _payloadData) = abi
+            .decode(_payload, (address, bytes, bytes));
+
+        address token = IStargate(_from).token();
+
+        uint256 reserveGas = 100000;
+
+        if (gasLeft < reserveGas) {
+            if (token != address(0)) {
+                IERC20(token).safeTransfer(to, amountLD);
+            }
+
+            /// @dev transfer any native token received as dust to the to address
+            if (address(this).balance > 0)
+                to.call{value: (address(this).balance)}("");
+
+            return;
+        }
+
+        // 100000 -> exit gas
+        uint256 limit = gasLeft - reserveGas;
+
+        if (_swapData.length > 0) {
+            try
+                ISushiXSwapV2Adapter(address(this)).swap{gas: limit}(
+                    amountLD,
+                    _swapData,
+                    token,
+                    _payloadData
+                )
+            {} catch (bytes memory) {}
+        } else if (_payloadData.length > 0) {
+            try
+                ISushiXSwapV2Adapter(address(this)).executePayload{gas: limit}(
+                    amountLD,
+                    _payloadData,
+                    token
+                )
+            {} catch (bytes memory) {}
+        } else {}
+
+        if (token != address(0) && IERC20(token).balanceOf(address(this)) > 0)
+            IERC20(token).safeTransfer(
+                to,
+                IERC20(token).balanceOf(address(this))
+            );
+
+        /// @dev transfer any native token received as dust to the to address
+        if (address(this).balance > 0)
+            to.call{value: (address(this).balance)}("");
     }
 
     /// @inheritdoc ISushiXSwapV2Adapter

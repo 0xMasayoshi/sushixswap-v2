@@ -13,7 +13,17 @@ import {SendParam, MessagingFee, MessagingReceipt, OFTReceipt} from "../interfac
 import {IStargate} from "../interfaces/stargate-v2/IStargate.sol";
 import {ILayerZeroComposer} from "../interfaces/layer-zero/ILayerZeroComposer.sol";
 
-import "forge-std/console.sol";
+struct StargateTeleportParams {
+    uint32 dstEid; // Destination endpoint ID.
+    address to; // Recipient address.
+    address token; // input token
+    uint256 amount; // Amount to send
+    uint256 amountMin; // Minimum amount to send
+    IStargate stargate; // stargate pool
+    MessagingFee messagingFee; // stargate messaging fee [stargate.quoteSend]
+    address receiver; // detination address for sgReceive
+    uint128 gas; // extra gas to be sent for dst chain operations
+}
 
 contract StargateV2Adapter is ISushiXSwapV2Adapter {
     using SafeERC20 for IERC20;
@@ -26,18 +36,6 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
 
     address constant NATIVE_ADDRESS =
         0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    struct StargateTeleportParams {
-        uint32 dstEid; // Destination endpoint ID.
-        address to; // Recipient address.
-        address token; // input token
-        uint256 amount; // Amount to send
-        uint256 amountMin; // Minimum amount to send
-        IStargate stargate; // stargate pool
-        MessagingFee messagingFee; // stargate messaging fee [stargate.quoteSend]
-        address receiver; // detination address for sgReceive
-        uint128 gas; // extra gas to be sent for dst chain operations
-    }
 
     error InsufficientGas();
     error NotStargateEndpoint();
@@ -127,7 +125,6 @@ contract StargateV2Adapter is ISushiXSwapV2Adapter {
         bytes calldata _swapData,
         bytes calldata _payloadData
     ) external payable override {
-        console.log('LFG');
         StargateTeleportParams memory params = abi.decode(
             _adapterData,
             (StargateTeleportParams)

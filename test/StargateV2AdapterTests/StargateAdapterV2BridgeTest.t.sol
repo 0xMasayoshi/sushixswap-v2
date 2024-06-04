@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import {SushiXSwapV2} from "../../src/SushiXSwapV2.sol";
-import {StargateV2Adapter} from "../../src/adapters/StargateV2Adapter.sol";
+import {StargateV2Adapter, StargateTeleportParams} from "../../src/adapters/StargateV2Adapter.sol";
 import {ISushiXSwapV2} from "../../src/interfaces/ISushiXSwapV2.sol";
 import {IRouteProcessor} from "../../src/interfaces/IRouteProcessor.sol";
 import {SendParam, MessagingFee, OFTReceipt} from "../../src/interfaces/layer-zero/IOFT.sol";
@@ -15,19 +15,6 @@ import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {OptionsBuilder} from "../../src/adapters/lib/layer-zero/OptionsBuilder.sol";
 
 import {StdUtils} from "forge-std/StdUtils.sol";
-
-
-struct StargateTeleportParams {
-    uint32 dstEid; // Destination endpoint ID.
-    address to; // Recipient address.
-    address token; // input token
-    uint256 amount; // Amount to send
-    uint256 amountMin; // Minimum amount to send
-    IStargate stargate; // stargate pool
-    MessagingFee messagingFee; // stargate messaging fee [stargate.quoteSend]
-    address receiver; // detination address for sgReceive
-    uint128 gas; // extra gas to be sent for dst chain operations
-}
 
 contract StargateV2AdapterBridgeTest is BaseTest {
     using SafeERC20 for IERC20;
@@ -149,7 +136,7 @@ contract StargateV2AdapterBridgeTest is BaseTest {
                     to: user,
                     receiver: address(stargateV2Adapter),
                     token: address(usdc),
-                    amount: amount,
+                    amount: 0,
                     amountMin: amountMin,
                     stargate: IStargate(stargatePoolUSDCAddress),
                     messagingFee: messagingFee,

@@ -143,8 +143,6 @@ contract StargateV2AdapterReceivesTest is BaseTest {
             "" // _payloadData
         );
 
-        console.logBytes(payload);
-
         vm.prank(constants.getAddress("mainnet.stargateV2Endpoint"));
         // auto sends enough gas, so no need to calculate gasNeeded & send here
         stargateV2Adapter.lzCompose(

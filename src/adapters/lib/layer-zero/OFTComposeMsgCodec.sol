@@ -2,8 +2,6 @@
 
 pragma solidity >= 0.8.0;
 
-import "forge-std/console.sol";
-
 library OFTComposeMsgCodec {
     // Offset constants for decoding composed messages
     uint8 private constant NONCE_OFFSET = 8;
@@ -70,8 +68,6 @@ library OFTComposeMsgCodec {
      * @return The composed message.
      */
     function composeMsg(bytes calldata _msg) internal view returns (bytes memory) {
-        console.logBytes(_msg);
-        console.logBytes(_msg[COMPOSE_FROM_OFFSET:]);
         return _msg[COMPOSE_FROM_OFFSET:];
     }
 
